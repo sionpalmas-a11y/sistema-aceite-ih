@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprovante de Aceite Digital - Sion Diagnósticos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
+        .documento { background: #fff; max-width: 800px; margin: 0 auto; padding: 40px; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 25px; }
+        .header h1 { font-size: 22px; color: #2563eb; text-transform: uppercase; margin-bottom: 4px; }
+        .header p { font-size: 13px; color: #64748b; }
+        .box-info { background: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13.5px; line-height: 1.6; }
+        .box-termo { border: 1px solid #e2e8f0; padding: 20px; border-radius: 6px; font-size: 12.5px; line-height: 1.6; background: #fafafa; margin-bottom: 25px; white-space: pre-wrap; }
+        .box-auditoria { background: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; font-size: 12px; line-height: 1.6; color: #1e40af; }
+        .btn-imprimir { background: #2563eb; color: #fff; border: none; padding: 10px 20px; font-weight: 600; border-radius: 6px; cursor: pointer; margin-bottom: 20px; }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .documento { border: none; box-shadow: none; padding: 0; width: 100%; }
+            .btn-imprimir { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div style="text-align: center;">
+    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir / Salvar em PDF</button>
+</div>
+
+<div class="documento">
+    <div class="header">
+        <h1>Sion Diagnósticos</h1>
+        <p>Anatomia Patológica e Citopatologia | Comprovante de Aceite Eletrônico</p>
+    </div>
+
+    <div class="box-info">
+        <strong>DADOS DO PACIENTE E SOLICITAÇÃO:</strong><br>
+        <strong>Paciente:</strong> <span id="nome">...</span><br>
+        <strong>CPF:</strong> <span id="cpf">...</span><br>
+        <strong>Telefone / WhatsApp:</strong> <span id="telefone">...</span><br>
+        <strong>Protocolo IH:</strong> <span id="protocolo">...</span><br>
+        <strong>Data da Solicitação:</strong> <span id="dataCriacao">...</span>
+    </div>
+
+    <h3 style="font-size: 14px; margin-bottom: 8px;">TERMO CONCORDADO E ACEITO:</h3>
+    <div class="box-termo" id="textoTermo">...</div>
+
+    <div class="box-auditoria">
+        <strong>REGISTRO E TRILHA DE AUDITORIA DIGITAL (LEI 14.063/2020 & MP 2.200-2/2001):</strong><br>
+        <strong>Status do Aceite:</strong> <span id="status">...</span><br>
+        <strong>Data e Hora Exata do Aceite:</strong> <span id="dataAceite">...</span><br>
+        <strong>Endereço IP do Dispositivo:</strong> <span id="ip">...</span><br>
+        <strong>Dispositivo / Navegador (User-Agent):</strong> <span id="userAgent">...</span><br>
+        <strong>Hash/Token Único de Validação:</strong> <span id="token">...</span>
+    </div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    window.onload = function() {
+        if (!token) return alert('Token inválido.');
+
+        fetch(`/api/comprovante/${token}`)
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    const d = res.dados;
+                    document.getElementById('nome').innerText = d.paciente_nome;
+                    document.getElementById('cpf').innerText = d.paciente_cpf;
+                    document.getElementById('telefone').innerText = d.paciente_telefone;
+                    document.getElementById('protocolo').innerText = d.protocolo_ih;
+                    document.getElementById('dataCriacao').innerText = d.data_criacao;
+                    document.getElementById('status').innerText = d.status;
+                    document.getElementById('dataAceite').innerText = d.data_aceite || 'Pendente';
+                    document.getElementById('ip').innerText = d.ip_paciente || 'N/A';
+                    document.getElementById('userAgent').innerText = d.user_agent || 'N/A';
+                    document.getElementById('token').innerText = d.token;
+                    document.getElementById('textoTermo').innerText = d.termo_versao || 'Termo padrão pendente de assinatura.';
+                } else {
+                    alert(res.error);
+                }
+            });
+    };
+</script>
+
+</body>
+</html>
