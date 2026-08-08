@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Aceite de IH - Sion Diagnósticos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --warning: #d97706;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--surface);
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            font-size: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        input {
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-whatsapp {
+            background: #25d366;
+            color: white;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-whatsapp:hover {
+            background: #1ebc57;
+        }
+
+        .table-wrapper {
+            margin-top: 30px;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13.5px;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--text-muted);
+            padding: 12px 16px;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-pendente {
+            background: #fef3c7;
+            color: var(--warning);
+        }
+
+        .badge-aceito {
+            background: #dcfce7;
+            color: var(--success);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2><i class="fa-solid fa-file-signature"></i> Gestão de Termos IH (Prazo 20 Dias)</h2>
+    </div>
+
+    <form id="formCadastro">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nome do Paciente</label>
+                <input type="text" id="paciente_nome" required placeholder="Nome completo">
+            </div>
+            <div class="form-group">
+                <label>CPF</label>
+                <input type="text" id="paciente_cpf" required placeholder="000.000.000-00">
+            </div>
+            <div class="form-group">
+                <label>WhatsApp (com DDD)</label>
+                <input type="text" id="paciente_telefone" required placeholder="63988887777">
+            </div>
+            <div class="form-group">
+                <label>Protocolo / Código IH</label>
+                <input type="text" id="protocolo_ih" required placeholder="Ex: IH-26044331">
+            </div>
+        </div>
+        <button type="submit" class="btn"><i class="fa-solid fa-plus"></i> Gerar Solicitacão de Aceite</button>
+    </form>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Paciente</th>
+                    <th>CPF</th>
+                    <th>Protocolo IH</th>
+                    <th>Data Envio</th>
+                    <th>Status</th>
+                    <th>Ações / WhatsApp</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaAceites">
+                <!-- Preenchido via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    window.onload = carregarTabela;
+
+    document.getElementById('formCadastro').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const dados = {
+            paciente_nome: document.getElementById('paciente_nome').value,
+            paciente_cpf: document.getElementById('paciente_cpf').value,
+            paciente_telefone: document.getElementById('paciente_telefone').value.replace(/\D/g, ''),
+            protocolo_ih: document.getElementById('protocolo_ih').value
+        };
+
+        fetch('/api/solicitacoes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dados)
+        })
+        .then(res => res.json())
+        .then(res => {
+            if(res.success) {
+                document.getElementById('formCadastro').reset();
+                carregarTabela();
+                dispararWhatsApp(res.registro);
+            } else {
+                alert('Erro ao gerar: ' + res.error);
+            }
+        });
+    });
+
+    function carregarTabela() {
+        fetch('/api/solicitacoes')
+            .then(res => res.json())
+            .then(dados => {
+                const tbody = document.getElementById('tabelaAceites');
+                tbody.innerHTML = '';
+
+                if(dados.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">Nenhuma solicitação cadastrada ainda.</td></tr>';
+                    return;
+                }
+
+                dados.forEach(p => {
+                    const statusBadge = p.status === 'ACEITO' 
+                        ? `<span class="badge badge-aceito">✓ ACEITO (${p.data_aceite})</span>`
+                        : `<span class="badge badge-pendente">PENDENTE</span>`;
+
+                    const linkPaciente = `${window.location.origin}/aceite.html?token=${p.token}`;
+                    const msgWhats = encodeURIComponent(`Olá, ${p.paciente_nome}! Para prosseguirmos com o seu exame de Imunohistoquímica (IH), pedimos que acesse o link abaixo para leitura e confirmação dos termos de prazo de processamento:\n\n${linkPaciente}`);
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${p.paciente_nome}</strong></td>
+                        <td>${p.paciente_cpf}</td>
+                        <td><strong>${p.protocolo_ih}</strong></td>
+                        <td>${p.data_criacao}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+    <div style="display: flex; gap: 6px;">
+        <a href="https://wa.me/55${p.paciente_telefone}?text=${msgWhats}" target="_blank" class="btn-whatsapp">
+            <i class="fa-brands fa-whatsapp"></i> Reenviar Link
+        </a>
+        ${p.status === 'ACEITO' ? `
+            <a href="/comprovante.html?token=${p.token}" target="_blank" style="background: #475569; color: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                📄 Comprovante
+            </a>
+        ` : ''}
+    </div>
+</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+    }
+
+    function dispararWhatsApp(registro) {
+        const linkPaciente = `${window.location.origin}/aceite.html?token=${registro.token}`;
+        const msgWhats = encodeURIComponent(`Olá, ${registro.paciente_nome}! Para prosseguirmos com o seu exame de Imunohistoquímica (IH), pedimos que acesse o link abaixo para leitura e confirmação dos termos de prazo de processamento:\n\n${linkPaciente}`);
+        
+        window.open(`https://wa.me/55${registro.paciente_telefone}?text=${msgWhats}`, '_blank');
+    }
+</script>
+
+</body>
+</html>
