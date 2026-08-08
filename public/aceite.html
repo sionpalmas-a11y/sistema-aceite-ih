@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autorização de Exame - Sion Diagnósticos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #475569;
+            --border: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+            max-width: 500px;
+            width: 100%;
+            padding: 24px;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: var(--primary);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .paciente-info {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .termo-box {
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: var(--text);
+            text-align: justify;
+            margin-bottom: 24px;
+            background: #fafafa;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .termo-box p {
+            margin-bottom: 12px;
+        }
+
+        .termo-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .btn-aceitar {
+            width: 100%;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-aceitar:hover {
+            background: var(--primary-hover);
+        }
+
+        .status-sucesso {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .status-sucesso i-icon {
+            font-size: 48px;
+            color: var(--success);
+        }
+
+        .status-sucesso h2 {
+            color: var(--success);
+            margin-top: 10px;
+            font-size: 20px;
+        }
+
+        .footer-note {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <h1>Sion Diagnósticos</h1>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Anatomia Patológica</p>
+    </div>
+
+    <div id="conteudoTermo">
+        <div class="paciente-info">
+            <strong>Paciente:</strong> <span id="nomePaciente">Carregando...</span><br>
+            <strong>CPF:</strong> <span id="cpfPaciente">...</span><br>
+            <strong>Protocolo IH:</strong> <span id="protocoloIH">...</span>
+        </div>
+
+        <div class="termo-box" id="textoTermoCompleto">
+            <p><strong>TERMO DE CIÊNCIA E AUTORIZAÇÃO DE PROCESSAMENTO DE IMUNOHISTOQUÍMICA (IH)</strong></p>
+            <p>Eu, devidamente identificado(a) acima, declaro estar ciente e de acordo com as seguintes condições para a realização do meu exame:</p>
+            <p>1. <strong>Envio a Laboratório de Apoio:</strong> A análise de Imunohistoquímica exige o processamento técnico e/ou envio da amostra para laboratórios especializados conveniados (fora do estado).</p>
+            <p>2. <strong>Prazos Operacionais:</strong> O prazo estimado para conclusão do diagnóstico e/ou devolução do material biológico em trânsito é de <strong>até 20 (vinte) dias úteis</strong>.</p>
+            <p>3. <strong>Indisponibilidade Temporária:</strong> Declaro ciência de que <strong>não será possível a devolução imediata ou em prazos inferiores a 20 dias úteis</strong> do material enquanto este estiver em trânsito, em fase de coloração técnica ou em análise técnica.</p>
+        </div>
+
+        <button class="btn-aceitar" id="btnAceitar" onclick="confirmarAceite()">LI E CONCORDO COM OS TERMOS</button>
+        <p class="footer-note">Ao clicar, seu aceite será registrado com data, hora e IP do seu dispositivo para fins de validação.</p>
+    </div>
+
+    <div id="telaSucesso" class="status-sucesso">
+        <h2>✓ Termo Confirmado com Sucesso!</h2>
+        <p style="font-size: 14px; color: var(--text-muted); margin-top: 10px;">
+            Sua autorização e ciência do prazo foram registradas no nosso sistema.<br>Obrigado!
+        </p>
+    </div>
+</div>
+
+<script>
+    // Captura o token diretamente da URL (ex: aceite.html?token=XXXXX)
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    window.onload = function() {
+        if (!token) {
+            alert('Link inválido ou sem autorização.');
+            return;
+        }
+
+        fetch(`/api/termo/${token}`)
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    document.getElementById('nomePaciente').innerText = res.dados.paciente_nome;
+                    document.getElementById('cpfPaciente').innerText = res.dados.paciente_cpf;
+                    document.getElementById('protocoloIH').innerText = res.dados.protocolo_ih;
+
+                    if (res.dados.status === 'ACEITO') {
+                        exibirSucesso();
+                    }
+                } else {
+                    alert('Erro ao carregar dados: ' + res.error);
+                }
+            })
+            .catch(err => console.error(err));
+    };
+
+    function confirmarAceite() {
+        const btn = document.getElementById('btnAceitar');
+        btn.disabled = true;
+        btn.innerText = 'Registrando...';
+
+        const termoTexto = document.getElementById('textoTermoCompleto').innerText;
+
+        fetch('/api/aceitar-termo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: token, termo_texto: termoTexto })
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.success) {
+                exibirSucesso();
+            } else {
+                alert(res.error);
+                btn.disabled = false;
+                btn.innerText = 'LI E CONCORDO COM OS TERMOS';
+            }
+        })
+        .catch(err => {
+            alert('Erro de conexão ao salvar aceite.');
+            btn.disabled = false;
+            btn.innerText = 'LI E CONCORDO COM OS TERMOS';
+        });
+    }
+
+    function exibirSucesso() {
+        document.getElementById('conteudoTermo').style.display = 'none';
+        document.getElementById('telaSucesso').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
