@@ -47,11 +47,11 @@
             margin-bottom: 20px;
         }
 
-        .header h1 {
-            font-size: 18px;
-            color: var(--primary);
-            font-weight: 700;
-            text-transform: uppercase;
+        .header img {
+            max-width: 200px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
         }
 
         .paciente-info {
@@ -131,8 +131,7 @@
 
 <div class="card">
     <div class="header">
-        <h1>Sion Diagnósticos</h1>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Anatomia Patológica</p>
+        <img src="Logo.png" alt="Laboratório Sion - Anatomia Patológica">
     </div>
 
     <div id="conteudoTermo">
@@ -144,10 +143,11 @@
 
         <div class="termo-box" id="textoTermoCompleto">
             <p><strong>TERMO DE CIÊNCIA E AUTORIZAÇÃO DE PROCESSAMENTO DE IMUNOHISTOQUÍMICA (IH)</strong></p>
-            <p>Eu, devidamente identificado(a) acima, declaro estar ciente e de acordo com as seguintes condições para a realização do meu exame:</p>
-            <p>1. <strong>Envio a Laboratório de Apoio:</strong> A análise de Imunohistoquímica exige o processamento técnico e/ou envio da amostra para laboratórios especializados conveniados (fora do estado).</p>
-            <p>2. <strong>Prazos Operacionais:</strong> O prazo estimado para conclusão do diagnóstico e/ou devolução do material biológico em trânsito é de <strong>até 20 (vinte) dias úteis</strong>.</p>
-            <p>3. <strong>Indisponibilidade Temporária:</strong> Declaro ciência de que <strong>não será possível a devolução imediata ou em prazos inferiores a 20 dias úteis</strong> do material enquanto este estiver em trânsito, em fase de coloração técnica ou em análise técnica.</p>
+            <p>Eu, devidamente identificado(a) neste formulário, declaro ter sido informado(a) e concordar com as condições técnicas e prazos necessários para o processamento e devolução do meu material biológico, conforme discriminado a seguir:</p>
+            <p>1. <strong>Envio e Processamento em Laboratório de Apoio Especializado:</strong> Declaro ciência de que o exame de Imunohistoquímica (IH) exige tecnologia especializada e será processado em laboratório de apoio conveniado, podendo haver a necessidade de transporte interestadual do bloco de parafina e/ou lâminas. Autorizo formalmente o envio e a tramitação do meu material biológico para este fim.</p>
+            <p>2. <strong>Condição Obrigatória para Solicitação de Devolução:</strong> Estou ciente de que a devolução do material biológico (bloco/lâminas) <strong>só poderá ser solicitada e processada APÓS a conclusão definitiva da análise técnica e emissão do laudo diagnóstico,</strong> visto que a amostra deve permanecer integralmente à disposição do médico patologista durante o processo analítico.</p>
+            <p>3. <strong>Tempo Médio para Retorno do Material:</strong> Reconheço que, <strong>após a solicitação formal de devolução do bloco/lâminas, </strong> o tempo médio estimado para a disponibilização física do material na unidade é de até <strong>20 (vinte) dias úteis </strong>. Esse prazo decorre da logística de resgate, embalagem biossegura e transporte de retorno do laboratório de apoio.</p>
+	    <p>4. <strong>Indisponibilidade Temporária e Irreversibilidade do Fluxo Logístico: </strong> Declaro ciência inequívoca de que <strong>não é possível a devolução imediata ou a interrupção do trânsito do material </strong>enquanto a amostra estiver sob análise técnica ou em transporte, sendo indispensável aguardar o fluxo logístico de retorno após a solicitação.</p>
         </div>
 
         <button class="btn-aceitar" id="btnAceitar" onclick="confirmarAceite()">LI E CONCORDO COM OS TERMOS</button>
