@@ -3,19 +3,23 @@ const express = require('express');
 const path = require('path');
 const { Pool } = require('pg');
 const crypto = require('crypto');
+const cors = require('cors');
 
+// 1. Primeiro cria a instância do app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuração da conexão com o banco de dados (PostgreSQL na nuvem)
+// 2. Agora sim usa o cors e outros middlewares
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+// Configuração da conexão com o banco de dados
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('render') ? { rejectUnauthorized: false } : false
 });
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
 
 // Rota 1: Inicializar a tabela no banco de dados (Cria automaticamente na nuvem)
 app.get('/api/init-db', async (req, res) => {
@@ -160,7 +164,23 @@ app.get('/api/comprovante/:token', async (req, res) => {
         res.status(500).json({ success: false, error: 'Erro ao buscar comprovante.' });
     }
 });
+// Rota 7: Excluir paciente/solicitação
+app.delete('/api/solicitacoes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = 'DELETE FROM aceites_ih WHERE id = $1 RETURNING *;';
+        const result = await pool.query(query, [id]);
 
+        if (result.rowCount === 0) {
+            return res.status(404).json({ success: false, error: 'Registro não encontrado.' });
+        }
+
+        res.json({ success: true, message: 'Registro excluído com sucesso!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: 'Erro ao excluir registro.' });
+    }
+});
 app.listen(PORT, () => {
     console.log(`Servidor de Aceite IH rodando na porta: ${PORT}`);
 });
