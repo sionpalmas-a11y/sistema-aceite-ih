@@ -10,6 +10,8 @@
         :root {
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
             --success: #16a34a;
             --warning: #d97706;
             --bg: #f8fafc;
@@ -124,8 +126,38 @@
             background: #1ebc57;
         }
 
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+        }
+
+        .search-container {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-container input {
+            flex: 1;
+        }
+
         .table-wrapper {
-            margin-top: 30px;
+            margin-top: 15px;
             overflow-x: auto;
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -196,8 +228,13 @@
                 <input type="text" id="protocolo_ih" required placeholder="Ex: IH-26044331">
             </div>
         </div>
-        <button type="submit" class="btn"><i class="fa-solid fa-plus"></i> Gerar Solicitacão de Aceite</button>
+        <button type="submit" class="btn"><i class="fa-solid fa-plus"></i> Gerar Solicitação de Aceite</button>
     </form>
+
+    <!-- Campo de Busca -->
+    <div class="search-container">
+        <input type="text" id="campoBusca" placeholder="🔍 Buscar por Nome, CPF ou Protocolo IH..." oninput="filtrarTabela()">
+    </div>
 
     <div class="table-wrapper">
         <table>
@@ -208,7 +245,7 @@
                     <th>Protocolo IH</th>
                     <th>Data Envio</th>
                     <th>Status</th>
-                    <th>Ações / WhatsApp</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody id="tabelaAceites">
@@ -219,6 +256,8 @@
 </div>
 
 <script>
+    let dadosGlobais = [];
+
     window.onload = carregarTabela;
 
     document.getElementById('formCadastro').addEventListener('submit', function(e) {
@@ -252,45 +291,81 @@
         fetch('/api/solicitacoes')
             .then(res => res.json())
             .then(dados => {
-                const tbody = document.getElementById('tabelaAceites');
-                tbody.innerHTML = '';
-
-                if(dados.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">Nenhuma solicitação cadastrada ainda.</td></tr>';
-                    return;
-                }
-
-                dados.forEach(p => {
-                    const statusBadge = p.status === 'ACEITO' 
-                        ? `<span class="badge badge-aceito">✓ ACEITO (${p.data_aceite})</span>`
-                        : `<span class="badge badge-pendente">PENDENTE</span>`;
-
-                    const linkPaciente = `${window.location.origin}/aceite.html?token=${p.token}`;
-                    const msgWhats = encodeURIComponent(`Olá, ${p.paciente_nome}! Para prosseguirmos com o seu exame de Imunohistoquímica (IH), pedimos que acesse o link abaixo para leitura e confirmação dos termos de prazo de processamento:\n\n${linkPaciente}`);
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><strong>${p.paciente_nome}</strong></td>
-                        <td>${p.paciente_cpf}</td>
-                        <td><strong>${p.protocolo_ih}</strong></td>
-                        <td>${p.data_criacao}</td>
-                        <td>${statusBadge}</td>
-                        <td>
-    <div style="display: flex; gap: 6px;">
-        <a href="https://wa.me/55${p.paciente_telefone}?text=${msgWhats}" target="_blank" class="btn-whatsapp">
-            <i class="fa-brands fa-whatsapp"></i> Reenviar Link
-        </a>
-        ${p.status === 'ACEITO' ? `
-            <a href="/comprovante.html?token=${p.token}" target="_blank" style="background: #475569; color: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-                📄 Comprovante
-            </a>
-        ` : ''}
-    </div>
-</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                dadosGlobais = dados;
+                renderizarTabela(dadosGlobais);
             });
+    }
+
+    function renderizarTabela(dados) {
+        const tbody = document.getElementById('tabelaAceites');
+        tbody.innerHTML = '';
+
+        if(dados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">Nenhuma solicitação encontrada.</td></tr>';
+            return;
+        }
+
+        dados.forEach(p => {
+            const statusBadge = p.status === 'ACEITO' 
+                ? `<span class="badge badge-aceito">✓ ACEITO (${p.data_aceite})</span>`
+                : `<span class="badge badge-pendente">PENDENTE</span>`;
+
+            const linkPaciente = `${window.location.origin}/aceite.html?token=${p.token}`;
+            const msgWhats = encodeURIComponent(`Olá, ${p.paciente_nome}! Para prosseguirmos com o seu exame de Imunohistoquímica (IH), pedimos que acesse o link abaixo para leitura e confirmação dos termos de prazo de processamento:\n\n${linkPaciente}`);
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${p.paciente_nome}</strong></td>
+                <td>${p.paciente_cpf}</td>
+                <td><strong>${p.protocolo_ih}</strong></td>
+                <td>${p.data_criacao}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <a href="https://wa.me/55${p.paciente_telefone}?text=${msgWhats}" target="_blank" class="btn-whatsapp">
+                            <i class="fa-brands fa-whatsapp"></i> Reenviar
+                        </a>
+                        ${p.status === 'ACEITO' ? `
+                            <a href="/comprovante.html?token=${p.token}" target="_blank" style="background: #475569; color: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                📄 Comprovante
+                            </a>
+                        ` : ''}
+                        <button class="btn-danger" onclick="excluirPaciente(${p.id})">
+                            <i class="fa-solid fa-trash"></i> Excluir
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filtrarTabela() {
+        const termo = document.getElementById('campoBusca').value.toLowerCase().trim();
+        const filtrados = dadosGlobais.filter(p => 
+            p.paciente_nome.toLowerCase().includes(termo) ||
+            p.paciente_cpf.includes(termo) ||
+            p.protocolo_ih.toLowerCase().includes(termo)
+        );
+        renderizarTabela(filtrados);
+    }
+
+    function excluirPaciente(id) {
+        if (confirm('Tem certeza que deseja excluir este registro? Esta ação não poderá ser desfeita.')) {
+            fetch(`/api/solicitacoes/${id}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        carregarTabela();
+                    } else {
+                        alert('Erro ao excluir: ' + res.error);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Erro na requisição ao excluir.');
+                });
+        }
     }
 
     function dispararWhatsApp(registro) {
