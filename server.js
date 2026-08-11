@@ -121,10 +121,23 @@ app.post('/api/aceitar-termo', async (req, res) => {
     }
 });
 
-// Rota 5: Listar todas as solicitações no painel do atendente
+// Rota 5: Listar todas as solicitações com fuso horário corrigido (UTC-3)
 app.get('/api/solicitacoes', async (req, res) => {
     try {
-        const query = "SELECT id, paciente_nome, paciente_cpf, paciente_telefone, protocolo_ih, token, status, TO_CHAR(data_criacao, 'DD/MM/YYYY HH24:MI') as data_criacao, TO_CHAR(data_aceite, 'DD/MM/YYYY HH24:MI') as data_aceite FROM aceites_ih ORDER BY id DESC";
+        const query = `
+            SELECT 
+                id, 
+                paciente_nome, 
+                paciente_cpf, 
+                paciente_telefone, 
+                protocolo_ih, 
+                token, 
+                status, 
+                TO_CHAR(data_criacao AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_criacao, 
+                TO_CHAR(data_aceite AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_aceite 
+            FROM aceites_ih 
+            ORDER BY id DESC;
+        `;
         const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
@@ -132,7 +145,7 @@ app.get('/api/solicitacoes', async (req, res) => {
         res.status(500).json({ success: false, error: 'Erro ao buscar lista.' });
     }
 });
-// Rota 6: para buscar os dados completos de auditoria para impressão/comprovante
+// Rota 6: Dados de comprovante com fuso horário corrigido (UTC-3)
 app.get('/api/comprovante/:token', async (req, res) => {
     try {
         const { token } = req.params;
@@ -143,8 +156,8 @@ app.get('/api/comprovante/:token', async (req, res) => {
                 paciente_telefone, 
                 protocolo_ih, 
                 status, 
-                TO_CHAR(data_criacao, 'DD/MM/YYYY HH24:MI:SS') as data_criacao,
-                TO_CHAR(data_aceite, 'DD/MM/YYYY HH24:MI:SS') as data_aceite,
+                TO_CHAR(data_criacao AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI:SS') as data_criacao,
+                TO_CHAR(data_aceite AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI:SS') as data_aceite,
                 ip_paciente,
                 user_agent,
                 termo_versao,
