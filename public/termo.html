@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sion Diagnósticos - Termo de Aceite</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { color: #0056b3; font-size: 18px; margin-top: 0; }
+        .box-termo { background: #f8f9fa; border: 1px solid #e9ecef; padding: 12px; font-size: 13px; line-height: 1.5; border-radius: 6px; margin-bottom: 15px; }
+        .campo { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #218838; }
+        .mensagem { display: none; padding: 15px; background: #d4edda; color: #155724; border-radius: 4px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="cardForm">
+    <h2>Termo de Responsabilidade e Retirada</h2>
+    <div class="box-termo">
+        Declaro que recebi o material biológico (blocos/lâminas) e assumo total responsabilidade pelo transporte e conservação do mesmo.
+    </div>
+
+    <form id="formTermo">
+        <div class="campo">
+            <label>Nome Completo de Quem Está Retirando:</label>
+            <input type="text" id="retirante_nome" required>
+        </div>
+        <div class="campo">
+            <label>CPF:</label>
+            <input type="text" id="retirante_cpf" required placeholder="000.000.000-00">
+        </div>
+        <div class="campo">
+            <label>Data de Nascimento:</label>
+            <input type="date" id="retirante_dob" required>
+        </div>
+        <div class="campo">
+            <label>Telefone para Contato:</label>
+            <input type="text" id="retirante_telefone" required placeholder="(63) 90000-0000">
+        </div>
+        <button type="submit" id="btnAssinar">CONFIRMAR E ASSINAR</button>
+    </form>
+</div>
+
+<div class="container mensagem" id="cardSucesso">
+    ✅ Termo assinado com sucesso! Pode fechar esta página.
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+
+    document.getElementById('formTermo').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnAssinar');
+        btn.disabled = true;
+        btn.innerText = "Enviando...";
+
+        const payload = {
+            paciente_id: id,
+            retirante_nome: document.getElementById('retirante_nome').value,
+            retirante_cpf: document.getElementById('retirante_cpf').value,
+            retirante_dob: document.getElementById('retirante_dob').value,
+            retirante_telefone: document.getElementById('retirante_telefone').value
+        };
+
+        try {
+            const res = await fetch('/api/registrar-aceite-pendente', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                document.getElementById('cardForm').style.display = 'none';
+                document.getElementById('cardSucesso').style.display = 'block';
+            } else {
+                alert('Erro ao registrar o aceite. Tente novamente.');
+                btn.disabled = false;
+                btn.innerText = "CONFIRMAR E ASSINAR";
+            }
+        } catch (err) {
+            alert('Erro na conexão.');
+            btn.disabled = false;
+            btn.innerText = "CONFIRMAR E ASSINAR";
+        }
+    });
+</script>
+</body>
+</html>
