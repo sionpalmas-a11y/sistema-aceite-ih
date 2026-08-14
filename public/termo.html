@@ -49,7 +49,6 @@
 <div class="container mensagem" id="cardSucesso">
     ✅ Termo assinado com sucesso! Pode fechar esta página.
 </div>
-
 <script>
     document.getElementById('formTermo').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -57,13 +56,19 @@
         btn.disabled = true;
         btn.innerText = "Enviando...";
 
-        // 1. Extrai o token ou id da URL (ex: ?id=11 ou ?token=xyz)
+        // 1. Extrai o token do caminho da URL (/termo/CODIGO) OU do parâmetro (?token=CODIGO)
+        const pathSegments = window.location.pathname.split('/');
+        const tokenDoPath = pathSegments[pathSegments.length - 1]; // Pega o valor depois do /termo/
+        
         const urlParams = new URLSearchParams(window.location.search);
-        const tokenEnviado = urlParams.get('token') || urlParams.get('id');
+        const tokenDaUrl = urlParams.get('token') || urlParams.get('id');
 
-        // 2. Monta o payload exatamente como a API no Render espera
+        // Garante a captura correta do token enviado na URL
+        const tokenFinal = (tokenDoPath && tokenDoPath !== 'termo.html') ? tokenDoPath : tokenDaUrl;
+
+        // 2. Monta os dados para o Render
         const payload = {
-            token: tokenEnviado,
+            token: tokenFinal,
             termo_texto: "Declaro que recebi o material biológico (blocos/lâminas) e assumo total responsabilidade pelo transporte e conservação do mesmo."
         };
 
