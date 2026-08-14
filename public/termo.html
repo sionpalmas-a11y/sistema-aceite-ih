@@ -51,26 +51,24 @@
 </div>
 
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-
     document.getElementById('formTermo').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btnAssinar');
         btn.disabled = true;
         btn.innerText = "Enviando...";
 
+        // 1. Extrai o token ou id da URL (ex: ?id=11 ou ?token=xyz)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenEnviado = urlParams.get('token') || urlParams.get('id');
+
+        // 2. Monta o payload exatamente como a API no Render espera
         const payload = {
-            paciente_id: id,
-            retirante_nome: document.getElementById('retirante_nome').value,
-            retirante_cpf: document.getElementById('retirante_cpf').value,
-            retirante_dob: document.getElementById('retirante_dob').value,
-            retirante_telefone: document.getElementById('retirante_telefone').value
+            token: tokenEnviado,
+            termo_texto: "Declaro que recebi o material biológico (blocos/lâminas) e assumo total responsabilidade pelo transporte e conservação do mesmo."
         };
 
         try {
-            // LINHA CORRIGIDA:
-const res = await fetch('/api/aceitar-termo', {
+            const res = await fetch('/api/aceitar-termo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -80,12 +78,13 @@ const res = await fetch('/api/aceitar-termo', {
                 document.getElementById('cardForm').style.display = 'none';
                 document.getElementById('cardSucesso').style.display = 'block';
             } else {
-                alert('Erro ao registrar o aceite. Tente novamente.');
+                const errData = await res.json();
+                alert(errData.error || 'Erro ao registrar o aceite. Tente novamente.');
                 btn.disabled = false;
                 btn.innerText = "CONFIRMAR E ASSINAR";
             }
         } catch (err) {
-            alert('Erro na conexão.');
+            alert('Erro na conexão com o servidor.');
             btn.disabled = false;
             btn.innerText = "CONFIRMAR E ASSINAR";
         }
