@@ -194,6 +194,39 @@ app.delete('/api/solicitacoes/:id', async (req, res) => {
         res.status(500).json({ success: false, error: 'Erro ao excluir registro.' });
     }
 });
+// Rota 8: Polling do Localhost (Devolve aceites pendentes e marca como SINCRONIZADO)
+app.get('/api/verificar-aceites-pendentes', async (req, res) => {
+    try {
+        // Busca todos os pacientes que aceitaram pelo celular mas ainda não foram puxados pelo localhost
+        const querySelect = `
+            SELECT 
+                protocolo_ih, 
+                status, 
+                TO_CHAR(data_aceite AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI:SS') as data_aceite,
+                ip_paciente AS ip_aceite, 
+                user_agent, 
+                token
+            FROM aceites_ih 
+            WHERE status = 'ACEITO';
+        `;
+        const result = await pool.query(querySelect);
+
+        // Se houver registros aceitos, atualiza o status para 'SINCRONIZADO'
+        if (result.rows.length > 0) {
+            const tokens = result.rows.map(r => r.token);
+            await pool.query(`
+                UPDATE aceites_ih 
+                SET status = 'SINCRONIZADO' 
+                WHERE token = ANY($1::text[])
+            `, [tokens]);
+        }
+
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Erro na verificação de aceites pendentes:', err);
+        res.status(500).json({ success: false, error: 'Erro ao verificar aceites.' });
+    }
+});
 app.listen(PORT, () => {
     console.log(`Servidor de Aceite IH rodando na porta: ${PORT}`);
 });
