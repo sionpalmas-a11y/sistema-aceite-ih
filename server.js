@@ -14,6 +14,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
+// Servir a página do termo para o paciente
+app.get('/termo/:token', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'termo.html'));
+});
 
 // Configuração da conexão com o banco de dados
 const pool = new Pool({
@@ -23,7 +27,11 @@ const pool = new Pool({
 
 // Rota 1: Inicializar a tabela no banco de dados (Cria automaticamente na nuvem)
 app.get('/api/init-db', async (req, res) => {
-    try {
+    const { key } = req.query;
+    if (key !== process.env.ADMIN_KEY) {
+        return res.status(403).json({ success: false, error: 'Acesso não autorizado.' });
+    }
+    // ... rest do código da Rota 1 ...
         const query = `
             CREATE TABLE IF NOT EXISTS aceites_ih (
                 id SERIAL PRIMARY KEY,
@@ -95,7 +103,8 @@ app.post('/api/aceitar-termo', async (req, res) => {
         const { token, termo_texto } = req.body;
         
         // Captura o IP real do celular do paciente
-        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const rawIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+const ip = rawIp ? rawIp.split(',')[0].trim() : req.socket.remoteAddress;
         const userAgent = req.headers['user-agent'];
 
         const query = `
@@ -181,7 +190,7 @@ app.get('/api/comprovante/:token', async (req, res) => {
 app.delete('/api/solicitacoes/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const query = 'DELETE FROM aceites_ih WHERE id = $1 RETURNING *;';
+        const query = "UPDATE aceites_ih SET status = 'CANCELADO' WHERE id = $1 RETURNING *;";
         const result = await pool.query(query, [id]);
 
         if (result.rowCount === 0) {
