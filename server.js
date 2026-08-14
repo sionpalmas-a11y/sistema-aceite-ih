@@ -203,10 +203,9 @@ app.delete('/api/solicitacoes/:id', async (req, res) => {
         res.status(500).json({ success: false, error: 'Erro ao excluir registro.' });
     }
 });
-// Rota 8: Polling do Localhost (Devolve aceites pendentes e marca como SINCRONIZADO)
+/// Rota 8: Polling do Localhost (Devolve aceites pendentes e sincronizados recente)
 app.get('/api/verificar-aceites-pendentes', async (req, res) => {
     try {
-        // Busca todos os pacientes que aceitaram pelo celular mas ainda não foram puxados pelo localhost
         const querySelect = `
             SELECT 
                 protocolo_ih, 
@@ -216,13 +215,16 @@ app.get('/api/verificar-aceites-pendentes', async (req, res) => {
                 user_agent, 
                 token
             FROM aceites_ih 
-            WHERE status = 'ACEITO';
+            WHERE status IN ('ACEITO', 'SINCRONIZADO')
+            ORDER BY id DESC
+            LIMIT 50;
         `;
         const result = await pool.query(querySelect);
 
-        // Se houver registros aceitos, atualiza o status para 'SINCRONIZADO'
-        if (result.rows.length > 0) {
-            const tokens = result.rows.map(r => r.token);
+        // Atualiza para SINCRONIZADO apenas os que ainda estavam como ACEITO
+        const aceitesPendentes = result.rows.filter(r => r.status === 'ACEITO');
+        if (aceitesPendentes.length > 0) {
+            const tokens = aceitesPendentes.map(r => r.token);
             await pool.query(`
                 UPDATE aceites_ih 
                 SET status = 'SINCRONIZADO' 
