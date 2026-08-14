@@ -311,8 +311,7 @@
                 : `<span class="badge badge-pendente">PENDENTE</span>`;
 
             const linkPaciente = `${window.location.origin}/aceite.html?token=${p.token}`;
-            const msgWhats = encodeURIComponent(`Olá, ${p.paciente_nome}! Para prosseguirmos com o seu exame de Imunohistoquímica (IH), pedimos que acesse o link abaixo para leitura e confirmação dos termos de prazo de processamento:\n\n${linkPaciente}`);
-
+            const msgWhats = encodeURIComponent(`Olá, ${p.paciente_nome}! Tudo bem?\n\nSomos da Sion Diagnósticos. Entramos em contato referente ao seu exame.\n\nPara garantir a máxima precisão diagnóstica, haverá a necessidade de enviar a sua amostra para processamento em um laboratório de apoio especializado.\n\nPara que possamos dar andamento ao processo com segurança, precisamos da sua autorização. Por gentileza, acesse o link abaixo para ler e confirmar o termo de consentimento e os prazos logísticos:\n\n${linkPaciente}\n\nQualquer dúvida, nossa equipe está à disposição para ajudar!`);
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${p.paciente_nome}</strong></td>
