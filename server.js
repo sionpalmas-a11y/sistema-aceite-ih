@@ -27,11 +27,12 @@ const pool = new Pool({
 
 // Rota 1: Inicializar a tabela no banco de dados (Cria automaticamente na nuvem)
 app.get('/api/init-db', async (req, res) => {
-    const { key } = req.query;
-    if (key !== process.env.ADMIN_KEY) {
-        return res.status(403).json({ success: false, error: 'Acesso não autorizado.' });
-    }
-    // ... rest do código da Rota 1 ...
+    try {
+        const { key } = req.query;
+        if (key !== process.env.ADMIN_KEY) {
+            return res.status(403).json({ success: false, error: 'Acesso não autorizado.' });
+        }
+
         const query = `
             CREATE TABLE IF NOT EXISTS aceites_ih (
                 id SERIAL PRIMARY KEY,
@@ -55,7 +56,6 @@ app.get('/api/init-db', async (req, res) => {
         res.status(500).json({ success: false, error: 'Erro ao criar tabela.' });
     }
 });
-
 // Rota 2: Atendente cadastra solicitação e gera o token/link único
 app.post('/api/solicitacoes', async (req, res) => {
     try {
