@@ -5,63 +5,63 @@ const { Pool } = require('pg');
 const crypto = require('crypto');
 const cors = require('cors');
 
-// 1. Primeiro cria a instância do app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 2. Agora sim usa o cors e outros middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-// Servir a página do termo para o paciente
+
 app.get('/termo/:token', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'termo.html'));
 });
 
-// Configuração da conexão com o banco de dados
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('render') ? { rejectUnauthorized: false } : false
 });
 
-// Rota 1: Inicializar a tabela no banco de dados (Cria automaticamente na nuvem)
-app.get('/api/init-db', async (req, res) => {
-    try {
-        const { key } = req.query;
-        if (key !== process.env.ADMIN_KEY) {
-            return res.status(403).json({ success: false, error: 'Acesso não autorizado.' });
-        }
-
-        const query = `
-            CREATE TABLE IF NOT EXISTS aceites_ih (
-                id SERIAL PRIMARY KEY,
-                paciente_nome VARCHAR(255) NOT NULL,
-                paciente_cpf VARCHAR(20) NOT NULL,
-                paciente_telefone VARCHAR(20) NOT NULL,
-                protocolo_ih VARCHAR(100) NOT NULL,
-                token VARCHAR(64) UNIQUE NOT NULL,
-                status VARCHAR(20) DEFAULT 'PENDENTE',
-                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                data_aceite TIMESTAMP,
-                ip_paciente VARCHAR(45),
-                user_agent TEXT,
-                termo_versao TEXT
-            );
-        `;
-        await pool.query(query);
-        res.json({ success: true, message: 'Tabela criada/verificada com sucesso no banco!' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, error: 'Erro ao criar tabela.' });
+async function inicializarBanco() {
+    if (!process.env.DATABASE_URL) {
+        console.error('ERRO: DATABASE_URL não foi configurada nas variáveis do Render.');
+        return;
     }
-});
-// Rota 2: Atendente cadastra solicitação e gera o token/link único
+
+    const query = `
+        CREATE TABLE IF NOT EXISTS aceites_ih (
+            id SERIAL PRIMARY KEY,
+            paciente_nome VARCHAR(255) NOT NULL,
+            paciente_cpf VARCHAR(20) NOT NULL,
+            paciente_telefone VARCHAR(20) NOT NULL,
+            protocolo_ih VARCHAR(100) NOT NULL,
+            token VARCHAR(64) UNIQUE NOT NULL,
+            status VARCHAR(20) DEFAULT 'PENDENTE',
+            data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            data_aceite TIMESTAMP,
+            ip_paciente VARCHAR(45),
+            user_agent TEXT,
+            termo_versao TEXT,
+            retirante_nome VARCHAR(255),
+            retirante_cpf VARCHAR(20),
+            retirante_telefone VARCHAR(20)
+        );
+
+        ALTER TABLE aceites_ih ADD COLUMN IF NOT EXISTS retirante_nome VARCHAR(255);
+        ALTER TABLE aceites_ih ADD COLUMN IF NOT EXISTS retirante_cpf VARCHAR(20);
+        ALTER TABLE aceites_ih ADD COLUMN IF NOT EXISTS retirante_telefone VARCHAR(20);
+    `;
+    try {
+        await pool.query(query);
+        console.log('Tabela aceites_ih verificada/atualizada com sucesso no banco!');
+    } catch (err) {
+        console.error('Erro ao criar/atualizar tabela no banco de dados:', err);
+    }
+}
+
 app.post('/api/solicitacoes', async (req, res) => {
     try {
         const { paciente_nome, paciente_cpf, paciente_telefone, protocolo_ih } = req.body;
-        
-        // Gera um token aleatório e único para o link do paciente
         const token = crypto.randomBytes(16).toString('hex');
 
         const query = `
@@ -79,7 +79,6 @@ app.post('/api/solicitacoes', async (req, res) => {
     }
 });
 
-// Rota 3: Paciente carrega os dados do termo pelo token
 app.get('/api/termo/:token', async (req, res) => {
     try {
         const { token } = req.params;
@@ -97,14 +96,11 @@ app.get('/api/termo/:token', async (req, res) => {
     }
 });
 
-// Rota 4: Paciente clica em "LI E ACEITO" (Registra a auditoria)
 app.post('/api/aceitar-termo', async (req, res) => {
     try {
-        const { token, termo_texto } = req.body;
-        
-        // Captura o IP real do celular do paciente
+        const { token, termo_texto, retirante_nome, retirante_cpf, retirante_telefone } = req.body;
         const rawIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-const ip = rawIp ? rawIp.split(',')[0].trim() : req.socket.remoteAddress;
+        const ip = rawIp ? rawIp.split(',')[0].trim() : req.socket.remoteAddress;
         const userAgent = req.headers['user-agent'];
 
         const query = `
@@ -113,11 +109,14 @@ const ip = rawIp ? rawIp.split(',')[0].trim() : req.socket.remoteAddress;
                 data_aceite = CURRENT_TIMESTAMP,
                 ip_paciente = $1,
                 user_agent = $2,
-                termo_versao = $3
-            WHERE token = $4 AND status = 'PENDENTE'
+                termo_versao = $3,
+                retirante_nome = $4,
+                retirante_cpf = $5,
+                retirante_telefone = $6
+            WHERE token = $7 AND status = 'PENDENTE'
             RETURNING *;
         `;
-        const result = await pool.query(query, [ip, userAgent, termo_texto, token]);
+        const result = await pool.query(query, [ip, userAgent, termo_texto, retirante_nome, retirante_cpf, retirante_telefone, token]);
 
         if (result.rowCount === 0) {
             return res.status(400).json({ success: false, error: 'Este termo já foi aceito anteriormente ou o link é inválido.' });
@@ -130,7 +129,6 @@ const ip = rawIp ? rawIp.split(',')[0].trim() : req.socket.remoteAddress;
     }
 });
 
-// Rota 5: Listar todas as solicitações com fuso horário corrigido (UTC-3)
 app.get('/api/solicitacoes', async (req, res) => {
     try {
         const query = `
@@ -154,7 +152,7 @@ app.get('/api/solicitacoes', async (req, res) => {
         res.status(500).json({ success: false, error: 'Erro ao buscar lista.' });
     }
 });
-// Rota 6: Dados de comprovante com fuso horário corrigido (UTC-3)
+
 app.get('/api/comprovante/:token', async (req, res) => {
     try {
         const { token } = req.params;
@@ -170,11 +168,14 @@ app.get('/api/comprovante/:token', async (req, res) => {
                 ip_paciente,
                 user_agent,
                 termo_versao,
-                token
+                token,
+                retirante_nome,
+                retirante_cpf,
+                retirante_telefone
             FROM aceites_ih 
             WHERE token = $1;
         `;
-        const result = await pool.query(query, [token]);
+        const result = await pool.query(query);
 
         if (result.rowCount === 0) {
             return res.status(404).json({ success: false, error: 'Comprovante não encontrado.' });
@@ -186,7 +187,7 @@ app.get('/api/comprovante/:token', async (req, res) => {
         res.status(500).json({ success: false, error: 'Erro ao buscar comprovante.' });
     }
 });
-// Rota 7: Excluir paciente/solicitação
+
 app.delete('/api/solicitacoes/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -203,7 +204,7 @@ app.delete('/api/solicitacoes/:id', async (req, res) => {
         res.status(500).json({ success: false, error: 'Erro ao excluir registro.' });
     }
 });
-/// Rota 8: Polling do Localhost (Devolve aceites pendentes e sincronizados recente)
+
 app.get('/api/verificar-aceites-pendentes', async (req, res) => {
     try {
         const querySelect = `
@@ -213,7 +214,13 @@ app.get('/api/verificar-aceites-pendentes', async (req, res) => {
                 TO_CHAR(data_aceite AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI:SS') as data_aceite,
                 ip_paciente AS ip_aceite, 
                 user_agent, 
-                token
+                token,
+                paciente_nome,
+                paciente_cpf,
+                paciente_telefone,
+                retirante_nome,
+                retirante_cpf,
+                retirante_telefone
             FROM aceites_ih 
             WHERE status IN ('ACEITO', 'SINCRONIZADO')
             ORDER BY id DESC
@@ -221,7 +228,6 @@ app.get('/api/verificar-aceites-pendentes', async (req, res) => {
         `;
         const result = await pool.query(querySelect);
 
-        // Atualiza para SINCRONIZADO apenas os que ainda estavam como ACEITO
         const aceitesPendentes = result.rows.filter(r => r.status === 'ACEITO');
         if (aceitesPendentes.length > 0) {
             const tokens = aceitesPendentes.map(r => r.token);
@@ -238,6 +244,8 @@ app.get('/api/verificar-aceites-pendentes', async (req, res) => {
         res.status(500).json({ success: false, error: 'Erro ao verificar aceites.' });
     }
 });
-app.listen(PORT, () => {
+
+app.listen(PORT, async () => {
+    await inicializarBanco();
     console.log(`Servidor de Aceite IH rodando na porta: ${PORT}`);
 });
