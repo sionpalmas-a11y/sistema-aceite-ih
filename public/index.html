@@ -288,13 +288,24 @@
     });
 
     function carregarTabela() {
-        fetch('/api/solicitacoes')
-            .then(res => res.json())
-            .then(dados => {
-                dadosGlobais = dados;
-                renderizarTabela(dadosGlobais);
-            });
-    }
+    fetch('/api/solicitacoes')
+        .then(res => {
+            if (!res.ok) throw new Error('Falha ao buscar solicitações no servidor.');
+            return res.json();
+        })
+        .then(dados => {
+            if (Array.isArray(dados)) {
+                renderizarTabela(dados);
+            } else {
+                console.error('Resposta inesperada da API:', dados);
+                renderizarTabela([]); // Passa array vazio para não quebrar a tela
+            }
+        })
+        .catch(err => {
+            console.error('Erro ao carregar tabela:', err);
+            renderizarTabela([]);
+        });
+}
 
     function renderizarTabela(dados) {
         const tbody = document.getElementById('tabelaAceites');
