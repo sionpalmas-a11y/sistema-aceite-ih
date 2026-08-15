@@ -154,37 +154,47 @@ app.get('/api/solicitacoes', async (req, res) => {
 });
 
 app.get('/api/comprovante/:token', async (req, res) => {
+    const { token } = req.params;
+
     try {
-        const { token } = req.params;
+        // Exemplo usando SQLite / PostgreSQL / MySQL (ajuste a consulta conforme seu banco)
         const query = `
             SELECT 
-                paciente_nome, 
-                paciente_cpf, 
-                paciente_telefone, 
-                protocolo_ih, 
-                status, 
-                TO_CHAR(data_criacao AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI:SS') as data_criacao,
-                TO_CHAR(data_aceite AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI:SS') as data_aceite,
+                paciente_nome,
+                paciente_cpf,
+                paciente_telefone,
+                protocolo_ih,
+                data_criacao,
+                status,
+                data_aceite,
                 ip_paciente,
                 user_agent,
-                termo_versao,
                 token,
-                retirante_nome,
-                retirante_cpf,
-                retirante_telefone
-            FROM aceites_ih 
-            WHERE token = $1;
+                termo_versao
+            FROM termos
+            WHERE token = ?
         `;
-        const result = await pool.query(query);
 
-        if (result.rowCount === 0) {
-            return res.status(404).json({ success: false, error: 'Comprovante não encontrado.' });
+        const registro = await db.get(query, [token]);
+
+        if (!registro) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Comprovante não encontrado para este token.' 
+            });
         }
 
-        res.json({ success: true, dados: result.rows[0] });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, error: 'Erro ao buscar comprovante.' });
+        res.json({
+            success: true,
+            dados: registro
+        });
+
+    } catch (error) {
+        console.error('Erro ao buscar comprovante:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Erro interno no servidor ao consultar o comprovante.' 
+        });
     }
 });
 
