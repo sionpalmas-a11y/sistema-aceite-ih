@@ -367,12 +367,12 @@
         }
     }
 
-    function dispararWhatsApp(registro) {
-        const linkPaciente = `${window.location.origin}/aceite.html?token=${registro.token}`;
-       const msgWhats = encodeURIComponent(`Olá, ${p.paciente_nome}! Tudo bem?\n\nSomos da Sion Diagnósticos. Entramos em contato referente ao seu exame.\n\nPara garantir a máxima precisão diagnóstica, haverá a necessidade de enviar a sua amostra para processamento em um laboratório de apoio especializado.\n\nPara que possamos dar andamento ao processo com segurança, precisamos da sua autorização. Por gentileza, acesse o link abaixo para ler e confirmar o termo de consentimento e os prazos logísticos:\n\n${linkPaciente}\n\nQualquer dúvida, nossa equipe está à disposição para ajudar!`);
-        
-        window.open(`https://wa.me/55${registro.paciente_telefone}?text=${msgWhats}`, '_blank');
-    }
+   function dispararWhatsApp(registro) {
+    const linkPaciente = `${window.location.origin}/aceite.html?token=${registro.token}`;
+    const msgWhats = encodeURIComponent(`Olá, ${registro.paciente_nome}! Tudo bem?\n\nSomos da Sion Diagnósticos. Entramos em contato referente ao seu exame.\n\nPara garantir a máxima precisão diagnóstica, haverá a necessidade de enviar a sua amostra para processamento em um laboratório de apoio especializado.\n\nPara que possamos dar andamento ao processo com segurança, precisamos da sua autorização. Por gentileza, acesse o link abaixo para ler e confirmar o termo de consentimento e os prazos logísticos:\n\n${linkPaciente}\n\nQualquer dúvida, nossa equipe está à disposição para ajudar!`);
+    
+    window.open(`https://wa.me/55${registro.paciente_telefone}?text=${msgWhats}`, '_blank');
+}
 </script>
 
 </body>
