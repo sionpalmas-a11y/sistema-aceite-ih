@@ -145,7 +145,7 @@ app.get('/api/solicitacoes', async (req, res) => {
             FROM aceites_ih 
             ORDER BY id DESC;
         `;
-        const result = await pool.query(query);
+        const result = await pool.query(query, [token]);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
