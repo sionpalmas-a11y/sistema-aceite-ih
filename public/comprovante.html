@@ -103,12 +103,18 @@
                 if (res.success) {
                     const d = res.dados;
                     
+                    // Valida se o status é ACEITO ou SINCRONIZADO
+                    const isAceito = d.status === 'ACEITO' || d.status === 'SINCRONIZADO';
+                    
                     document.getElementById('nome').innerText = d.paciente_nome || 'N/A';
                     document.getElementById('cpf').innerText = d.paciente_cpf || 'N/A';
                     document.getElementById('telefone').innerText = d.paciente_telefone || 'N/A';
                     document.getElementById('protocolo').innerText = d.protocolo_ih || 'N/A';
                     document.getElementById('dataCriacao').innerText = d.data_criacao || 'N/A';
-                    document.getElementById('status').innerText = d.status || 'PENDENTE';
+                    
+                    // Exibe 'ACEITO' no texto de auditoria caso o status seja 'SINCRONIZADO'
+                    document.getElementById('status').innerText = isAceito ? 'ACEITO' : (d.status || 'PENDENTE');
+                    
                     document.getElementById('dataAceite').innerText = d.data_aceite || 'Pendente de assinatura';
                     document.getElementById('ip').innerText = d.ip_paciente || 'N/A';
                     document.getElementById('userAgent').innerText = d.user_agent || 'N/A';
@@ -116,7 +122,7 @@
                     document.getElementById('textoTermo').innerText = d.termo_versao || d.termo_texto || 'Termo padrão de aceite.';
 
                     const banner = document.getElementById('bannerStatus');
-                    if (d.status === 'ACEITO') {
+                    if (isAceito) {
                         banner.className = 'status-banner status-aceito';
                         banner.innerText = '✓ DOCUMENTO ASSINADO DIGITALMENTE E VALIDADO';
                     } else {
