@@ -72,9 +72,10 @@ app.get('/api/solicitacoes', async (req, res) => {
                 protocolo_ih, 
                 token, 
                 status, 
-                COALESCE(TO_CHAR(data_criacao, 'DD/MM/YYYY HH24:MI'), '') as data_criacao, 
-                COALESCE(TO_CHAR(data_aceite, 'DD/MM/YYYY HH24:MI'), '') as data_aceite 
+                COALESCE(TO_CHAR(data_criacao AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI'), '') as data_criacao, 
+                COALESCE(TO_CHAR(data_aceite AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI'), '') as data_aceite 
             FROM aceites_ih 
+            WHERE status != 'CANCELADO'
             ORDER BY id DESC;
         `;
         const result = await pool.query(query);
