@@ -56,20 +56,20 @@
         btn.disabled = true;
         btn.innerText = "Enviando...";
 
-        // 1. Extrai o token do caminho da URL (/termo/CODIGO) OU do parâmetro (?token=CODIGO)
         const pathSegments = window.location.pathname.split('/');
-        const tokenDoPath = pathSegments[pathSegments.length - 1]; // Pega o valor depois do /termo/
+        const tokenDoPath = pathSegments[pathSegments.length - 1];
         
         const urlParams = new URLSearchParams(window.location.search);
         const tokenDaUrl = urlParams.get('token') || urlParams.get('id');
 
-        // Garante a captura correta do token enviado na URL
         const tokenFinal = (tokenDoPath && tokenDoPath !== 'termo.html') ? tokenDoPath : tokenDaUrl;
 
-        // 2. Monta os dados para o Render
         const payload = {
             token: tokenFinal,
-            termo_texto: "Declaro que recebi o material biológico (blocos/lâminas) e assumo total responsabilidade pelo transporte e conservação do mesmo."
+            termo_texto: "Declaro que recebi o material biológico (blocos/lâminas) e assumo total responsabilidade pelo transporte e conservação do mesmo.",
+            retirante_nome: document.getElementById('retirante_nome').value,
+            retirante_cpf: document.getElementById('retirante_cpf').value,
+            retirante_telefone: document.getElementById('retirante_telefone').value
         };
 
         try {
