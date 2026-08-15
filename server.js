@@ -28,36 +28,62 @@ async function inicializarBanco() {
         return;
     }
 
-    const query = `
-        CREATE TABLE IF NOT EXISTS aceites_ih (
-            id SERIAL PRIMARY KEY,
-            paciente_nome VARCHAR(255) NOT NULL,
-            paciente_cpf VARCHAR(20) NOT NULL,
-            paciente_telefone VARCHAR(20) NOT NULL,
-            protocolo_ih VARCHAR(100) NOT NULL,
-            token VARCHAR(64) UNIQUE NOT NULL,
-            status VARCHAR(20) DEFAULT 'PENDENTE',
-            data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            data_aceite TIMESTAMP,
-            ip_paciente VARCHAR(45),
-            user_agent TEXT,
-            termo_versao TEXT,
-            retirante_nome VARCHAR(255),
-            retirante_cpf VARCHAR(20),
-            retirante_telefone VARCHAR(20)
-        );
-
-        ALTER TABLE aceites_ih ADD COLUMN IF NOT EXISTS retirante_nome VARCHAR(255);
-        ALTER TABLE aceites_ih ADD COLUMN IF NOT EXISTS retirante_cpf VARCHAR(20);
-        ALTER TABLE aceites_ih ADD COLUMN IF NOT EXISTS retirante_telefone VARCHAR(20);
-    `;
     try {
-        await pool.query(query);
+        // Criando a tabela caso não exista
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS aceites_ih (
+                id SERIAL PRIMARY KEY,
+                paciente_nome VARCHAR(255) NOT NULL,
+                paciente_cpf VARCHAR(20) NOT NULL,
+                paciente_telefone VARCHAR(20) NOT NULL,
+                protocolo_ih VARCHAR(100) NOT NULL,
+                token VARCHAR(64) UNIQUE NOT NULL,
+                status VARCHAR(20) DEFAULT 'PENDENTE',
+                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                data_aceite TIMESTAMP,
+                ip_paciente VARCHAR(45),
+                user_agent TEXT,
+                termo_versao TEXT,
+                retirante_nome VARCHAR(255),
+                retirante_cpf VARCHAR(20),
+                retirante_telefone VARCHAR(20)
+            );
+        `);
+
+        // Garante que as colunas adicionais existam
+        await pool.query(`ALTER TABLE aceites_ih ADD COLUMN IF NOT EXISTS retirante_nome VARCHAR(255);`);
+        await pool.query(`ALTER TABLE aceites_ih ADD COLUMN IF NOT EXISTS retirante_cpf VARCHAR(20);`);
+        await pool.query(`ALTER TABLE aceites_ih ADD COLUMN IF NOT EXISTS retirante_telefone VARCHAR(20);`);
+
         console.log('Tabela aceites_ih verificada/atualizada com sucesso no banco!');
     } catch (err) {
         console.error('Erro ao criar/atualizar tabela no banco de dados:', err);
     }
 }
+
+app.get('/api/solicitacoes', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                id, 
+                paciente_nome, 
+                paciente_cpf, 
+                paciente_telefone, 
+                protocolo_ih, 
+                token, 
+                status, 
+                COALESCE(TO_CHAR(data_criacao, 'DD/MM/YYYY HH24:MI'), '') as data_criacao, 
+                COALESCE(TO_CHAR(data_aceite, 'DD/MM/YYYY HH24:MI'), '') as data_aceite 
+            FROM aceites_ih 
+            ORDER BY id DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Erro em GET /api/solicitacoes:', err);
+        res.status(500).json({ success: false, error: 'Erro ao buscar lista.' });
+    }
+});
 
 app.post('/api/solicitacoes', async (req, res) => {
     try {
