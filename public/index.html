@@ -308,47 +308,55 @@
 }
 
     function renderizarTabela(dados) {
-        const tbody = document.getElementById('tabelaAceites');
-        tbody.innerHTML = '';
+    const tbody = document.getElementById('tabelaAceites');
+    tbody.innerHTML = '';
 
-        if(dados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">Nenhuma solicitação encontrada.</td></tr>';
-            return;
+    if (dados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">Nenhuma solicitação encontrada.</td></tr>';
+        return;
+    }
+
+    dados.forEach(p => {
+        // Trata 'ACEITO' e 'SINCRONIZADO' da mesma forma
+        const isAceito = p.status === 'ACEITO' || p.status === 'SINCRONIZADO';
+
+        let statusBadge = `<span class="badge badge-pendente">PENDENTE</span>`;
+        if (isAceito) {
+            const dataExibicao = p.data_aceite ? ` (${p.data_aceite})` : '';
+            statusBadge = `<span class="badge badge-aceito">✓ ACEITO${dataExibicao}</span>`;
+        } else if (p.status === 'CANCELADO') {
+            statusBadge = `<span class="badge badge-danger">CANCELADO</span>`;
         }
 
-        dados.forEach(p => {
-            const statusBadge = p.status === 'ACEITO' 
-                ? `<span class="badge badge-aceito">✓ ACEITO (${p.data_aceite})</span>`
-                : `<span class="badge badge-pendente">PENDENTE</span>`;
-
-            const linkPaciente = `${window.location.origin}/aceite.html?token=${p.token}`;
-            const msgWhats = encodeURIComponent(`Olá, ${p.paciente_nome}! Tudo bem?\n\nSomos da Sion Diagnósticos. Entramos em contato referente ao seu exame.\n\nPara garantir a máxima precisão diagnóstica, haverá a necessidade de enviar a sua amostra para processamento em um laboratório de apoio especializado.\n\nPara que possamos dar andamento ao processo com segurança, precisamos da sua autorização. Por gentileza, acesse o link abaixo para ler e confirmar o termo de consentimento e os prazos logísticos:\n\n${linkPaciente}\n\nQualquer dúvida, nossa equipe está à disposição para ajudar!`);
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${p.paciente_nome}</strong></td>
-                <td>${p.paciente_cpf}</td>
-                <td><strong>${p.protocolo_ih}</strong></td>
-                <td>${p.data_criacao}</td>
-                <td>${statusBadge}</td>
-                <td>
-                    <div style="display: flex; gap: 6px; align-items: center;">
-                        <a href="https://wa.me/55${p.paciente_telefone}?text=${msgWhats}" target="_blank" class="btn-whatsapp">
-                            <i class="fa-brands fa-whatsapp"></i> Reenviar
+        const linkPaciente = `${window.location.origin}/aceite.html?token=${p.token}`;
+        const msgWhats = encodeURIComponent(`Olá, ${p.paciente_nome}! Tudo bem?\n\nSomos da Sion Diagnósticos. Entramos em contato referente ao seu exame.\n\nPara garantir a máxima precisão diagnóstica, haverá a necessidade de enviar a sua amostra para processamento em um laboratório de apoio especializado.\n\nPara que possamos dar andamento ao processo com segurança, precisamos da sua autorização. Por gentileza, acesse o link abaixo para ler e confirmar o termo de consentimento e os prazos logísticos:\n\n${linkPaciente}\n\nQualquer dúvida, nossa equipe está à disposição para ajudar!`);
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${p.paciente_nome}</strong></td>
+            <td>${p.paciente_cpf}</td>
+            <td><strong>${p.protocolo_ih}</strong></td>
+            <td>${p.data_criacao}</td>
+            <td>${statusBadge}</td>
+            <td>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <a href="https://wa.me/55${p.paciente_telefone}?text=${msgWhats}" target="_blank" class="btn-whatsapp">
+                        <i class="fa-brands fa-whatsapp"></i> Reenviar
+                    </a>
+                    ${isAceito ? `
+                        <a href="/comprovante.html?token=${p.token}" target="_blank" style="background: #475569; color: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                            📄 Comprovante
                         </a>
-                        ${p.status === 'ACEITO' ? `
-                            <a href="/comprovante.html?token=${p.token}" target="_blank" style="background: #475569; color: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-                                📄 Comprovante
-                            </a>
-                        ` : ''}
-                        <button class="btn-danger" onclick="excluirPaciente(${p.id})">
-                            <i class="fa-solid fa-trash"></i> Excluir
-                        </button>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+                    ` : ''}
+                    <button class="btn-danger" onclick="excluirPaciente(${p.id})">
+                        <i class="fa-solid fa-trash"></i> Excluir
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
     function filtrarTabela() {
         const termo = document.getElementById('campoBusca').value.toLowerCase().trim();
